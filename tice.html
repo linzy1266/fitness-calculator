@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>国家体质健康测试成绩计算器</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  
+  <!-- 配置Tailwind -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            warning: '#F59E0B',
+            danger: '#EF4444',
+            neutral: '#64748B',
+            light: '#F1F5F9',
+            dark: '#1E293B'
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .card-shadow {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+      }
+      .input-focus {
+        @apply focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none;
+      }
+      .transition-custom {
+        @apply transition-all duration-300 ease-in-out;
+      }
+    }
+  </style>
+</head>
+<body class="font-inter bg-gray-50 text-dark min-h-screen">
+  <!-- 顶部导航 -->
+  <header class="bg-white shadow-sm sticky top-0 z-50 transition-custom">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fa fa-heartbeat text-primary text-2xl"></i>
+        <h1 class="text-xl md:text-2xl font-bold text-primary">体质健康测试计算器</h1>
+      </div>
+      <nav>
+        <ul class="flex space-x-6">
+          <li><a href="#" class="text-neutral hover:text-primary transition-custom"><i class="fa fa-home mr-1"></i>首页</a></li>
+          <li><a href="#standards" class="text-neutral hover:text-primary transition-custom"><i class="fa fa-book mr-1"></i>标准</a></li>
+          <li><a href="#about" class="text-neutral hover:text-primary transition-custom"><i class="fa fa-info-circle mr-1"></i>关于</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8">
+    <!-- 介绍部分 -->
+    <section class="mb-12 text-center max-w-3xl mx-auto">
+      <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold mb-4 text-dark">国家体质健康测试成绩计算</h2>
+      <p class="text-neutral text-lg mb-6">根据国家体质健康测试标准，输入您的各项体测数据，我们将为您计算得分并提供健康建议</p>
+      <div class="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full">
+        <i class="fa fa-info-circle mr-2"></i>
+        <span>数据依据国家体质健康测试标准（存在一定误差）</span>
+      </div>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- 个人信息和测试项目 -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- 个人信息卡片 -->
+        <div class="bg-white rounded-xl p-6 card-shadow">
+          <h3 class="text-xl font-semibold mb-4 flex items-center">
+            <i class="fa fa-user-circle text-primary mr-2"></i>个人信息
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-neutral mb-1">年级</label>
+              <select id="grade" class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus transition-custom">
+                <option value="freshman">大一</option>
+                <option value="sophomore">大二</option>
+                <option value="junior">大三</option>
+                <option value="senior">大四</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-neutral mb-1">性别</label>
+              <div class="flex space-x-4">
+                <label class="inline-flex items-center">
+                  <input type="radio" name="gender" value="male" checked class="text-primary input-focus">
+                  <span class="ml-2">男</span>
+                </label>
+                <label class="inline-flex items-center">
+                  <input type="radio" name="gender" value="female" class="text-primary input-focus">
+                  <span class="ml-2">女</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 测试项目卡片 -->
+        <div class="bg-white rounded-xl p-6 card-shadow">
+          <h3 class="text-xl font-semibold mb-6 flex items-center">
+            <i class="fa fa-list-alt text-primary mr-2"></i>体测项目
+          </h3>
+          
+          <div class="space-y-6">
+            <!-- 身高体重 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-neutral mb-1">身高 (厘米)</label>
+                <input type="number" id="height" min="100" max="250" value="175" 
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus transition-custom">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-neutral mb-1">体重 (千克)</label>
+                <input type="number" id="weight" min="30" max="200" value="65" 
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus transition-custom">
+              </div>
+            </div>
+            
+            <!-- 肺活量 -->
+            <div>
+              <label class="block text-sm font-medium text-neutral mb-1">肺活量 (毫升)</label>
+              <input type="number" id="vital-capacity" min="1000" max="10000" value="4000" 
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus transition-custom">
+            </div>
+            
+            <!-- 50米跑 -->
+            <div>
+              <label class="block text-sm font-medium text-neutral mb-1">50米跑 (秒)</label>
+              <input type="number" id="sprint-50m" min="5" max="20" step="0.1" value="7.5" 
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus transition-custom">
+            </div>
+            
+            <!-- 立定跳远 -->
+            <div>
+              <label class="block text-sm font-medium text-neutral mb-1">立定跳远 (厘米)</label>
+              <input type="number" id="long-jump" min="50" max="300" value="220" 
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus transition-custom">
+            </div>
+            
+            <!-- 坐位体前屈 -->
+            <div>
+              <label class="block text-sm font-medium text-neutral mb-1">坐位体前屈 (厘米)</label>
+              <input type="number" id="sit-reach" min="-20" max="50" step="0.1" value="15" 
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus transition-custom">
+            </div>
+            
+            <!-- 耐力跑 -->
+            <div>
+              <label class="block text-sm font-medium text-neutral mb-1" id="endurance-label">1000米跑 (分:秒)</label>
+              <div class="flex space-x-2">
+                <input type="number" id="endurance-min" min="2" max="15" value="4" 
+                  class="flex-1 px-4 py-2 border border-gray-300 rounded-lg input-focus transition-custom">
+                <span class="flex items-center">:</span>
+                <input type="number" id="endurance-sec" min="0" max="59" value="30" 
+                  class="flex-1 px-4 py-2 border border-gray-300 rounded-lg input-focus transition-custom">
+              </div>
+            </div>
+            
+            <!-- 力量项目 -->
+            <div>
+              <label class="block text-sm font-medium text-neutral mb-1" id="strength-label">引体向上 (次)</label>
+              <input type="number" id="strength" min="0" max="50" value="10" 
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus transition-custom">
+            </div>
+          </div>
+          
+          <div class="mt-8 text-center">
+            <button id="calculate-btn" class="px-8 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-custom transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary/50">
+              <i class="fa fa-calculator mr-2"></i>计算成绩
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 结果展示 -->
+      <div class="space-y-6">
+        <!-- 总分卡片 -->
+        <div class="bg-white rounded-xl p-6 card-shadow">
+          <h3 class="text-xl font-semibold mb-4 flex items-center">
+            <i class="fa fa-trophy text-primary mr-2"></i>测试总评
+          </h3>
+          <div class="text-center py-6">
+            <div class="text-5xl font-bold text-primary mb-2" id="total-score">0</div>
+            <div class="text-xl font-medium" id="total-rating">待计算</div>
+            <div class="mt-4 px-4 py-2 rounded-full inline-block" id="rating-badge">
+              <span class="text-sm">请输入数据并计算</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 各项得分 -->
+        <div class="bg-white rounded-xl p-6 card-shadow">
+          <h3 class="text-xl font-semibold mb-4 flex items-center">
+            <i class="fa fa-bar-chart text-primary mr-2"></i>各项得分
+          </h3>
+          <div class="space-y-3" id="scores-detail">
+            <!-- 各项得分将在这里动态生成 -->
+            <div class="animate-pulse text-center py-8 text-neutral">请点击计算按钮查看结果</div>
+          </div>
+        </div>
+        
+        <!-- 雷达图 -->
+        <div class="bg-white rounded-xl p-6 card-shadow">
+          <h3 class="text-xl font-semibold mb-4 flex items-center">
+            <i class="fa fa-line-chart text-primary mr-2"></i>能力分析
+          </h3>
+          <div class="h-64">
+            <canvas id="radar-chart"></canvas>
+          </div>
+        </div>
+        
+        <!-- 健康建议 -->
+        <div class="bg-white rounded-xl p-6 card-shadow">
+          <h3 class="text-xl font-semibold mb-4 flex items-center">
+            <i class="fa fa-lightbulb-o text-primary mr-2"></i>健康建议
+          </h3>
+          <div id="health-advice" class="text-neutral space-y-2">
+            <p class="italic">完成测试后将显示个性化健康建议</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 评分标准 -->
+    <section id="standards" class="mt-16 mb-12">
+      <h2 class="text-2xl font-bold mb-6 text-center">国家体质健康测试评分标准</h2>
+      <div class="bg-white rounded-xl p-6 card-shadow overflow-x-auto">
+        <table class="min-w-full">
+          <thead>
+            <tr class="bg-light">
+              <th class="py-3 px-4 text-left">项目</th>
+              <th class="py-3 px-4 text-center">优秀</th>
+              <th class="py-3 px-4 text-center">良好</th>
+              <th class="py-3 px-4 text-center">及格</th>
+              <th class="py-3 px-4 text-center">不及格</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <tr>
+              <td class="py-3 px-4 font-medium">BMI</td>
+              <td class="py-3 px-4 text-center">18.5-23.9</td>
+              <td class="py-3 px-4 text-center">24.0-27.9</td>
+              <td class="py-3 px-4 text-center">17.0-18.4或28.0-30.0</td>
+              <td class="py-3 px-4 text-center">&lt;17.0或&gt;30.0</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 font-medium">肺活量(男)</td>
+              <td class="py-3 px-4 text-center">大一/大二&gt;4800ml<br>大三/大四&gt;5040ml</td>
+              <td class="py-3 px-4 text-center">大一/大二4200-4799ml<br>大三/大四4450-5039ml</td>
+              <td class="py-3 px-4 text-center">大一/大二3100-4199ml<br>大三/大四3350-4449ml</td>
+              <td class="py-3 px-4 text-center">大一/大二&lt;3100ml<br>大三/大四&lt;3350ml</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 font-medium">肺活量(女)</td>
+              <td class="py-3 px-4 text-center">大一/大二&gt;3400ml<br>大三/大四&gt;3650ml</td>
+              <td class="py-3 px-4 text-center">大一/大二2800-3399ml<br>大三/大四3050-3649ml</td>
+              <td class="py-3 px-4 text-center">大一/大二2000-2799ml<br>大三/大四2250-3049ml</td>
+              <td class="py-3 px-4 text-center">大一/大二&lt;2000ml<br>大三/大四&lt;2250ml</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 font-medium">50米跑(男)</td>
+              <td class="py-3 px-4 text-center">大一/大二&lt;6.8秒<br>大三/大四&lt;6.7秒</td>
+              <td class="py-3 px-4 text-center">大一/大二6.8-7.2秒<br>大三/大四6.7-7.1秒</td>
+              <td class="py-3 px-4 text-center">大一/大二7.3-9.0秒<br>大三/大四7.2-9.0秒</td>
+              <td class="py-3 px-4 text-center">&gt;9.0秒</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 font-medium">50米跑(女)</td>
+              <td class="py-3 px-4 text-center">大一/大二&lt;7.6秒<br>大三/大四&lt;7.5秒</td>
+              <td class="py-3 px-4 text-center">大一/大二7.6-8.0秒<br>大三/大四7.5-7.9秒</td>
+              <td class="py-3 px-4 text-center">大一/大二8.1-10.0秒<br>大三/大四8.0-10.0秒</td>
+              <td class="py-3 px-4 text-center">&gt;10.0秒</td>
+            </tr>
+            <!-- 更多标准... -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+    
+    <!-- 关于部分 -->
+    <section id="about" class="mt-16 mb-12">
+      <div class="bg-white rounded-xl p-6 card-shadow">
+        <h2 class="text-2xl font-bold mb-4">关于体质健康测试</h2>
+        <p class="text-neutral mb-4">国家体质健康测试是一项全面评估人体健康状况的标准测试，包括身体成分、心肺功能、肌肉力量、柔韧性和耐力等多个方面。</p>
+        <p class="text-neutral mb-4">本计算器依据国家体质健康测试标准（2025年最新版）开发，仅供参考，不能替代专业医疗机构的健康评估。</p>
+        <p class="text-neutral">定期进行体质测试有助于了解自身健康状况，制定科学的锻炼计划，提高身体素质和健康水平。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-dark text-white py-8">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div>
+          <h3 class="text-lg font-semibold mb-4 flex items-center">
+            <i class="fa fa-heartbeat text-primary mr-2"></i>体质健康测试计算器
+          </h3>
+          <p class="text-gray-400">专业、准确的体测成绩计算工具，助力您了解自身健康状况。</p>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">快速链接</h3>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="#" class="hover:text-primary transition-custom">首页</a></li>
+            <li><a href="#standards" class="hover:text-primary transition-custom">评分标准</a></li>
+
+          </ul>
+        </div>
+     
+      </div>
+      <div class="mt-8 pt-6 border-t border-gray-700 text-center text-gray-500 text-sm">
+        &copy; 2025 体质健康测试计算器
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // 性别切换处理
+    document.querySelectorAll('input[name="gender"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        const isMale = this.value === 'male';
+        document.getElementById('endurance-label').textContent = isMale ? '1000米跑 (分:秒)' : '800米跑 (分:秒)';
+        document.getElementById('strength-label').textContent = isMale ? '引体向上 (次)' : '仰卧起坐 (次/分钟)';
+      });
+    });
+
+    // 评分标准数据 - 区分大一/大二和大三/大四
+    const scoringStandards = {
+      male: {
+        freshman: {  // 大一、大二
+          bmi: {
+            excellent: { min: 18.5, max: 23.9, score: 100 },
+            good: { min: 24.0, max: 27.9, score: 80 },
+            pass: { min: 17.0, max: 18.4, score: 60 },
+            pass2: { min: 28.0, max: 30.0, score: 60 },
+            fail: { score: 0 }
+          },
+          vitalCapacity: {
+            excellent: { min: 4800.0, score: 100 },
+            good: { min: 4200.0, max: 4799.9, score: 80 },
+            pass: { min: 3100.0, max: 4199.9, score: 60 },
+            fail: { max: 3099.9, score: 0 }
+          },
+          sprint50m: {
+            excellent: { max: 6.7, score: 100 },
+            good: { min: 6.8, max: 7.2, score: 80 },
+            pass: { min: 7.3, max: 9.0, score: 60 },
+            fail: { min: 9.1, score: 0 }
+          },
+          longJump: {
+            excellent: { min: 250.0, score: 100 },
+            good: { min: 230.0, max: 249.9, score: 80 },
+            pass: { min: 195.0, max: 229.9, score: 60 },
+            fail: { max: 194.9, score: 0 }
+          },
+          sitReach: {
+            excellent: { min: 25.0, score: 100 },
+            good: { min: 20.0, max: 24.9, score: 80 },
+            pass: { min: 10.0, max: 19.9, score: 60 },
+            fail: { max: 9.9, score: 0 }
+          },
+          enduranceRun: { // 1000米，秒
+            excellent: { max: 210.0, score: 100 }, // 3分30秒
+            good: { min: 211.0, max: 240.0, score: 80 }, // 3分31秒 - 4分
+            pass: { min: 241.0, max: 300.0, score: 60 }, // 4分1秒 - 5分
+            fail: { min: 301.0, score: 0 }
+          },
+          strength: { // 引体向上
+            excellent: { min: 15.0, score: 100 },
+            good: { min: 10.0, max: 14.0, score: 80 },
+            pass: { min: 4.0, max: 9.0, score: 60 },
+            fail: { max: 3.0, score: 0 }
+          }
+        },
+        senior: {  // 大三、大四
+          bmi: {
+            excellent: { min: 18.5, max: 23.9, score: 100 },
+            good: { min: 24.0, max: 27.9, score: 80 },
+            pass: { min: 17.0, max: 18.4, score: 60 },
+            pass2: { min: 28.0, max: 30.0, score: 60 },
+            fail: { score: 0 }
+          },
+          vitalCapacity: {
+            excellent: { min: 5040.0, score: 100 },
+            good: { min: 4450.0, max: 5039.9, score: 80 },
+            pass: { min: 3350.0, max: 4449.9, score: 60 },
+            fail: { max: 3349.9, score: 0 }
+          },
+          sprint50m: {
+            excellent: { max: 6.6, score: 100 },
+            good: { min: 6.7, max: 7.1, score: 80 },
+            pass: { min: 7.2, max: 9.0, score: 60 },
+            fail: { min: 9.1, score: 0 }
+          },
+          longJump: {
+            excellent: { min: 260.0, score: 100 },
+            good: { min: 240.0, max: 259.9, score: 80 },
+            pass: { min: 205.0, max: 239.9, score: 60 },
+            fail: { max: 204.9, score: 0 }
+          },
+          sitReach: {
+            excellent: { min: 26.0, score: 100 },
+            good: { min: 21.0, max: 25.9, score: 80 },
+            pass: { min: 11.0, max: 20.9, score: 60 },
+            fail: { max: 10.9, score: 0 }
+          },
+          enduranceRun: { // 1000米，秒
+            excellent: { max: 200.0, score: 100 }, // 3分20秒
+            good: { min: 201.0, max: 230.0, score: 80 }, // 3分21秒 - 3分50秒
+            pass: { min: 231.0, max: 290.0, score: 60 }, // 3分51秒 - 4分50秒
+            fail: { min: 291.0, score: 0 }
+          },
+          strength: { // 引体向上
+            excellent: { min: 17.0, score: 100 },
+            good: { min: 12.0, max: 16.0, score: 80 },
+            pass: { min: 5.0, max: 11.0, score: 60 },
+            fail: { max: 4.0, score: 0 }
+          }
+        }
+      },
+      female: {
+        freshman: {  // 大一、大二
+          bmi: {
+            excellent: { min: 18.5, max: 23.9, score: 100 },
+            good: { min: 24.0, max: 27.9, score: 80 },
+            pass: { min: 17.0, max: 18.4, score: 60 },
+            pass2: { min: 28.0, max: 30.0, score: 60 },
+            fail: { score: 0 }
+          },
+          vitalCapacity: {
+            excellent: { min: 3400.0, score: 100 },
+            good: { min: 2800.0, max: 3399.9, score: 80 },
+            pass: { min: 2000.0, max: 2799.9, score: 60 },
+            fail: { max: 1999.9, score: 0 }
+          },
+          sprint50m: {
+            excellent: { max: 7.5, score: 100 },
+            good: { min: 7.6, max: 8.0, score: 80 },
+            pass: { min: 8.1, max: 10.0, score: 60 },
+            fail: { min: 10.1, score: 0 }
+          },
+          longJump: {
+            excellent: { min: 190.0, score: 100 },
+            good: { min: 170.0, max: 189.9, score: 80 },
+            pass: { min: 140.0, max: 169.9, score: 60 },
+            fail: { max: 139.9, score: 0 }
+          },
+          sitReach: {
+            excellent: { min: 26.0, score: 100 },
+            good: { min: 21.0, max: 25.9, score: 80 },
+            pass: { min: 12.0, max: 20.9, score: 60 },
+            fail: { max: 11.9, score: 0 }
+          },
+          enduranceRun: { // 800米，秒
+            excellent: { max: 180.0, score: 100 }, // 3分
+            good: { min: 181.0, max: 210.0, score: 80 }, // 3分1秒 - 3分30秒
+            pass: { min: 211.0, max: 270.0, score: 60 }, // 3分31秒 - 4分30秒
+            fail: { min: 271.0, score: 0 }
+          },
+          strength: { // 仰卧起坐，次/分钟
+            excellent: { min: 45.0, score: 100 },
+            good: { min: 39.0, max: 44.0, score: 80 },
+            pass: { min: 25.0, max: 38.0, score: 60 },
+            fail: { max: 24.0, score: 0 }
+          }
+        },
+        senior: {  // 大三、大四
+          bmi: {
+            excellent: { min: 18.5, max: 23.9, score: 100 },
+            good: { min: 24.0, max: 27.9, score: 80 },
+            pass: { min: 17.0, max: 18.4, score: 60 },
+            pass2: { min: 28.0, max: 30.0, score: 60 },
+            fail: { score: 0 }
+          },
+          vitalCapacity: {
+            excellent: { min: 3650.0, score: 100 },
+            good: { min: 3050.0, max: 3649.9, score: 80 },
+            pass: { min: 2250.0, max: 3049.9, score: 60 },
+            fail: { max: 2249.9, score: 0 }
+          },
+          sprint50m: {
+            excellent: { max: 7.4, score: 100 },
+            good: { min: 7.5, max: 7.9, score: 80 },
+            pass: { min: 8.0, max: 10.0, score: 60 },
+            fail: { min: 10.1, score: 0 }
+          },
+          longJump: {
+            excellent: { min: 200.0, score: 100 },
+            good: { min: 180.0, max: 199.9, score: 80 },
+            pass: { min: 150.0, max: 179.9, score: 60 },
+            fail: { max: 149.9, score: 0 }
+          },
+          sitReach: {
+            excellent: { min: 27.0, score: 100 },
+            good: { min: 22.0, max: 26.9, score: 80 },
+            pass: { min: 13.0, max: 21.9, score: 60 },
+            fail: { max: 12.9, score: 0 }
+          },
+          enduranceRun: { // 800米，秒
+            excellent: { max: 170.0, score: 100 }, // 2分50秒
+            good: { min: 171.0, max: 200.0, score: 80 }, // 2分51秒 - 3分20秒
+            pass: { min: 201.0, max: 260.0, score: 60 }, // 3分21秒 - 4分20秒
+            fail: { min: 261.0, score: 0 }
+          },
+          strength: { // 仰卧起坐，次/分钟
+            excellent: { min: 47.0, score: 100 },
+            good: { min: 41.0, max: 46.0, score: 80 },
+            pass: { min: 27.0, max: 40.0, score: 60 },
+            fail: { max: 26.0, score: 0 }
+          }
+        }
+      }
+    };
+
+    // 计算各项得分
+    function calculateScores() {
+      // 获取用户输入
+      const grade = document.getElementById('grade').value;
+      const isSenior = grade === 'junior' || grade === 'senior';
+      const gender = document.querySelector('input[name="gender"]:checked').value;
+      const height = parseFloat(document.getElementById('height').value);
+      const weight = parseFloat(document.getElementById('weight').value);
+      const vitalCapacity = parseInt(document.getElementById('vital-capacity').value);
+      const sprint50m = parseFloat(document.getElementById('sprint-50m').value);
+      const longJump = parseInt(document.getElementById('long-jump').value);
+      const sitReach = parseFloat(document.getElementById('sit-reach').value);
+      const enduranceMin = parseInt(document.getElementById('endurance-min').value);
+      const enduranceSec = parseInt(document.getElementById('endurance-sec').value);
+      const enduranceTotalSec = enduranceMin * 60 + enduranceSec;
+      const strength = parseInt(document.getElementById('strength').value);
+      
+      // 计算BMI
+      const bmi = weight / ((height / 100) ** 2);
+      
+      // 获取对应性别和年级的评分标准
+      const standards = scoringStandards[gender][isSenior ? 'senior' : 'freshman'];
+      
+      // 计算各项得分
+      const scores = {
+        bmi: calculateBMIScore(bmi, standards.bmi),
+        vitalCapacity: calculateScore(vitalCapacity, standards.vitalCapacity),
+        sprint50m: calculateScore(sprint50m, standards.sprint50m, true),
+        longJump: calculateScore(longJump, standards.longJump),
+        sitReach: calculateScore(sitReach, standards.sitReach),
+        enduranceRun: calculateScore(enduranceTotalSec, standards.enduranceRun, true),
+        strength: calculateScore(strength, standards.strength)
+      };
+      
+      // 计算总分
+      let totalScore = 0;
+      Object.values(scores).forEach(score => {
+        totalScore += score;
+      });
+      totalScore = Math.round(totalScore / Object.values(scores).length);
+      
+      // 更新UI
+      updateResults(scores, totalScore, bmi, gender, enduranceMin, enduranceSec);
+      
+      // 生成健康建议
+      generateAdvice(scores, gender);
+      
+      // 绘制雷达图
+      drawRadarChart(scores);
+    }
+    
+    // 计算BMI得分
+    function calculateBMIScore(bmi, standards) {
+      if (bmi >= standards.excellent.min && bmi <= standards.excellent.max) {
+        return standards.excellent.score;
+      } else if (bmi >= standards.good.min && bmi <= standards.good.max) {
+        return standards.good.score;
+      } else if ((bmi >= standards.pass.min && bmi <= standards.pass.max) || 
+                 (bmi >= standards.pass2.min && bmi <= standards.pass2.max)) {
+        return standards.pass.score;
+      } else {
+        return standards.fail.score;
+      }
+    }
+    
+    // 计算其他项目得分
+    function calculateScore(value, standards, lowerBetter = false) {
+      if (lowerBetter) {
+        // 数值越低越好（如跑步时间）
+        if (value <= standards.excellent.max) {
+          return standards.excellent.score;
+        } else if (value >= standards.good.min && value <= standards.good.max) {
+          return standards.good.score;
+        } else if (value >= standards.pass.min && value <= standards.pass.max) {
+          return standards.pass.score;
+        } else {
+          return standards.fail.score;
+        }
+      } else {
+        // 数值越高越好（如跳远、肺活量等）
+        if (value >= standards.excellent.min) {
+          return standards.excellent.score;
+        } else if (value >= standards.good.min && value <= standards.good.max) {
+          return standards.good.score;
+        } else if (value >= standards.pass.min && value <= standards.pass.max) {
+          return standards.pass.score;
+        } else {
+          return standards.fail.score;
+        }
+      }
+    }
+    
+    // 更新结果UI
+    function updateResults(scores, totalScore, bmi, gender, enduranceMin, enduranceSec) {
+      // 更新总分
+      document.getElementById('total-score').textContent = totalScore;
+      
+      // 确定总评级
+      let totalRating, ratingColor;
+      if (totalScore >= 90) {
+        totalRating = '优秀';
+        ratingColor = 'bg-secondary/20 text-secondary';
+      } else if (totalScore >= 75) {
+        totalRating = '良好';
+        ratingColor = 'bg-primary/20 text-primary';
+      } else if (totalScore >= 60) {
+        totalRating = '及格';
+        ratingColor = 'bg-warning/20 text-warning';
+      } else {
+        totalRating = '不及格';
+        ratingColor = 'bg-danger/20 text-danger';
+      }
+      
+      document.getElementById('total-rating').textContent = totalRating;
+      document.getElementById('rating-badge').className = `mt-4 px-4 py-2 rounded-full inline-block ${ratingColor}`;
+      document.getElementById('rating-badge').innerHTML = `<span class="text-sm">综合评级：${totalRating}</span>`;
+      
+      // 项目名称映射
+      const itemNames = {
+        bmi: `身体质量指数 (BMI: ${bmi.toFixed(1)})`,
+        vitalCapacity: '肺活量',
+        sprint50m: '50米跑',
+        longJump: '立定跳远',
+        sitReach: '坐位体前屈',
+        enduranceRun: `${gender === 'male' ? '1000米' : '800米'}跑 (${enduranceMin}:${enduranceSec.toString().padStart(2, '0')})`,
+        strength: gender === 'male' ? '引体向上' : '仰卧起坐'
+      };
+      
+      // 更新各项得分详情
+      const scoresDetail = document.getElementById('scores-detail');
+      scoresDetail.innerHTML = '';
+      
+      Object.entries(scores).forEach(([key, score]) => {
+        let scoreColor;
+        if (score === 100) {
+          scoreColor = 'text-secondary';
+        } else if (score === 80) {
+          scoreColor = 'text-primary';
+        } else if (score === 60) {
+          scoreColor = 'text-warning';
+        } else {
+          scoreColor = 'text-danger';
+        }
+        
+        const scoreItem = document.createElement('div');
+        scoreItem.className = 'flex justify-between items-center';
+        scoreItem.innerHTML = `
+          <div class="flex items-center">
+            <i class="fa ${getItemIcon(key)} text-primary mr-2"></i>
+            <span>${itemNames[key]}</span>
+          </div>
+          <span class="font-medium ${scoreColor}">${score}分</span>
+        `;
+        scoresDetail.appendChild(scoreItem);
+      });
+    }
+    
+    // 获取项目图标
+    function getItemIcon(itemKey) {
+      const icons = {
+        bmi: 'fa-balance-scale',
+        vitalCapacity: 'fa-lungs',
+        sprint50m: 'fa-bolt',
+        longJump: 'fa-person-running',
+        sitReach: 'fa-child',
+        enduranceRun: 'fa-route',
+        strength: 'fa-dumbbell'
+      };
+      return icons[itemKey] || 'fa-check';
+    }
+    
+    // 生成健康建议
+    function generateAdvice(scores, gender) {
+      const adviceElement = document.getElementById('health-advice');
+      let advice = [];
+      
+      // 总体建议
+      let totalScore = 0;
+      Object.values(scores).forEach(score => totalScore += score);
+      totalScore = Math.round(totalScore / Object.values(scores).length);
+      
+      if (totalScore >= 90) {
+        advice.push('您的体质状况非常优秀！请继续保持良好的生活习惯和运动频率。');
+      } else if (totalScore >= 75) {
+        advice.push('您的体质状况良好，适当增加运动强度可以进一步提升健康水平。');
+      } else if (totalScore >= 60) {
+        advice.push('您的体质状况基本达标，建议增加日常运动量，改善生活习惯。');
+      } else {
+        advice.push('您的体质状况有待提高，建议制定系统的锻炼计划，改善饮食和作息习惯。');
+      }
+      
+      advice.push(''); // 空行
+      
+      // 针对弱项的建议
+      const weakItems = [];
+      Object.entries(scores).forEach(([key, score]) => {
+        if (score < 60) {
+          weakItems.push(key);
+        }
+      });
+      
+      if (weakItems.length > 0) {
+        advice.push('需要重点改善的方面：');
+        
+        const itemAdvice = {
+          bmi: '注意饮食均衡，控制热量摄入，增加有氧运动如快走、慢跑等。',
+          vitalCapacity: '多进行有氧运动如游泳、跑步，练习腹式呼吸，提高心肺功能。',
+          sprint50m: '进行爆发力训练，如高抬腿、蛙跳、短距离冲刺练习。',
+          longJump: '加强下肢力量训练，如深蹲、弓步蹲，同时提高爆发力。',
+          sitReach: '每天进行柔韧性训练，如瑜伽、动态拉伸，特别是下肢和腰部。',
+          enduranceRun: '循序渐进地增加长跑训练，提高心肺耐力和肌肉耐力。',
+          strength: gender === 'male' 
+            ? '增加上肢力量训练，如俯卧撑、哑铃练习，逐步提高引体向上能力。'
+            : '进行核心力量训练，每天练习仰卧起坐，逐步提高次数和速度。'
+        };
+        
+        const itemNames = {
+          bmi: '身体质量指数',
+          vitalCapacity: '肺活量',
+          sprint50m: '50米跑',
+          longJump: '立定跳远',
+          sitReach: '坐位体前屈',
+          enduranceRun: gender === 'male' ? '1000米跑' : '800米跑',
+          strength: gender === 'male' ? '引体向上' : '仰卧起坐'
+        };
+        
+        weakItems.forEach(item => {
+          advice.push(`- ${itemNames[item]}: ${itemAdvice[item]}`);
+        });
+      } else {
+        advice.push('您的各项指标均达到合格以上水平，继续保持均衡锻炼即可。');
+      }
+      
+      // 更新建议UI
+      adviceElement.innerHTML = advice.map(text => 
+        text ? `<p>${text}</p>` : '<p class="my-1"></p>'
+      ).join('');
+    }
+    
+    // 绘制雷达图
+    let radarChart;
+    function drawRadarChart(scores) {
+      const ctx = document.getElementById('radar-chart').getContext('2d');
+      
+      // 销毁现有图表
+      if (radarChart) {
+        radarChart.destroy();
+      }
+      
+      // 项目名称
+      const labels = [
+        '身体质量指数',
+        '肺活量',
+        '50米跑',
+        '立定跳远',
+        '坐位体前屈',
+        '耐力跑',
+        '力量'
+      ];
+      
+      // 数据
+      const data = Object.values(scores);
+      
+      // 创建图表
+      radarChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: '体测得分',
+            data: data,
+            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+            borderColor: 'rgba(59, 130, 246, 1)',
+            pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: 'rgba(59, 130, 246, 1)'
+          }]
+        },
+        options: {
+          scales: {
+            r: {
+              angleLines: {
+                display: true
+              },
+              suggestedMin: 0,
+              suggestedMax: 100
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            }
+          }
+        }
+      });
+    }
+    
+    // 计算按钮点击事件
+    document.getElementById('calculate-btn').addEventListener('click', function() {
+      // 添加按钮点击动画
+      this.classList.add('scale-95');
+      setTimeout(() => {
+        this.classList.remove('scale-95');
+        calculateScores();
+      }, 150);
+      
+      // 滚动到结果区域（移动端）
+      if (window.innerWidth < 1024) {
+        document.querySelector('.lg\\:col-span-1').scrollIntoView({
+          behavior: 'smooth'
+        });
+      }
+    });
+    
+    // 页面加载时初始化
+    window.addEventListener('load', function() {
+      // 初始化一个空图表
+      const ctx = document.getElementById('radar-chart').getContext('2d');
+      radarChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: [],
+          datasets: []
+        },
+        options: {
+          scales: {
+            r: {
+              suggestedMin: 0,
+              suggestedMax: 100
+            }
+          }
+        }
+      });
+    });
+    
+    // 滚动时导航栏效果
+    window.addEventListener('scroll', function() {
+      const header = document.querySelector('header');
+      if (window.scrollY > 10) {
+        header.classList.add('py-2', 'shadow');
+        header.classList.remove('py-4', 'shadow-sm');
+      } else {
+        header.classList.add('py-4', 'shadow-sm');
+        header.classList.remove('py-2', 'shadow');
+      }
+    });
+  </script>
+</body>
+</html>
