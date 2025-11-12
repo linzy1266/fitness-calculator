@@ -544,7 +544,7 @@
       const strength = parseInt(document.getElementById('strength').value);
       
       // 计算BMI
-      const bmi = weight / ((height / 100) ** 2);
+      const bmi = parseFloat((weight / ((height / 100)** 2)).toFixed(1));
       
       // 获取对应性别和年级的评分标准
       const standards = scoringStandards[gender][isSenior ? 'senior' : 'freshman'];
@@ -875,4 +875,5 @@
     });
   </script>
 </body>
+
 </html>
